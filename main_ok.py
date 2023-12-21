@@ -5,56 +5,43 @@ from datetime import datetime
 
 class Field:  # Базовий клас для полів запису.
     def __init__(self, value):
-        self._value = value
+        self.value = value
 
     def __str__(self):
-        return str(self._value)
+        return str(self.value)
 
 
-class Name(Field):
-    def __init__(self, name):
-        super().__init__(name)
-
-    @property
-    def name(self):
-        return self._value
-
-    @name.setter
-    def name(self, new_name):
-        self._value = new_name
+class Name(Field):  # Клас для зберігання імені контакту.
+    pass
 
 
-class Phone(Field):
-    def __init__(self, phone):
-        self.value = phone  # Викличемо сетер для валідації та зберігання значення
+class Phone(Field):  # Клас для зберігання номера телефону.
+    def __init__(self, value):
+        super().__init__(self.validate(value))
 
-    @property
-    def value(self):
-        return self._value
-
-    @value.setter
-    def value(self, phone):
-        if phone .isdigit() and len(phone) == 10:
-            Field.__init__(self, phone)
+    @staticmethod
+    def validate(value):
+        if value.isdigit() and len(value) == 10:
+            return value
         else:
-            raise ValueError('Phone number must contain 10 digits')
+            raise ValueError('phone number must contain 10 digits')
 
 
 class Birthday(Field):
-    def __init__(self, birthday):
-        self.value = birthday  # Викличемо сетер для валідації та зберігання значення
+    def __init__(self, value):
+        super().__init__(self.validate_date_of_birth(value))
 
-    @staticmethod
-    def validate_date_of_birth(birthday):
+    @staticmethod  # перевірка дати
+    def validate_date_of_birth(value):
         pattern = re.compile(
             r'^(\d{4}[- /.]\d{1,2}[- /.]\d{1,2}|\d{1,2}[- /.]\d{1,2}[- /.]\d{4})$')
-        if bool(pattern.match(birthday)):
-            return Birthday.parse_date(birthday)
+        if bool(pattern.match(value)):
+            return Birthday.parse_date(value)
         else:
             raise ValueError(
-                'The date format must match (yyyy mm dd), (dd mm yyyy)')
+                'the date format must match (yyyy mm dd),(dd mm yyyy)')
 
-    @staticmethod
+    @staticmethod  # створеня обекту datetime
     def parse_date(date_string):
         parts = re.split(r'[ ,.]', date_string)
         current_date = datetime.now()
@@ -69,15 +56,7 @@ class Birthday(Field):
         if current_date >= birthdate:
             return birthdate.date()
         else:
-            raise ValueError('Date of birth is greater than the current date')
-
-    @property
-    def value(self):
-        return str(self._value)
-
-    @value.setter
-    def value(self, new_value):
-        Field.__init__(self, self.validate_date_of_birth(new_value))
+            raise ValueError('date of birth is greater than the current date')
 
 
 class Record:  # Клас для зберігання інформації про контакт
@@ -89,11 +68,17 @@ class Record:  # Клас для зберігання інформації пр�
         else:
             self._birthday = None
 
+    def add_phone(self, phone):
+        try:
+            self._phones.append(Phone(phone))
+        except ValueError as error:
+            print(error)
+
     def __add_birthday(self, date):
         try:
             return Birthday(date)
         except ValueError as error:
-            print(self._name._value, ' : ', error)
+            print(self._name.value, ' : ', error)
 
     def find_phone(self, phone):  # пошук
         for el in self._phones:
@@ -110,17 +95,17 @@ class Record:  # Клас для зберігання інформації пр�
     def days_to_birthday(self):  # повертає кількість днів до наступного дня народженя
         current_date = datetime.now()
         next_birthday = datetime(
-            current_date.year, self._birthday._value.month, self._birthday._value.day)
+            current_date.year, self._birthday.value.month, self._birthday.value.day)
         if current_date > next_birthday:
             next_birthday = datetime(
-                current_date.year + 1, self._birthday._value.month, self._birthday._value.day)
+                current_date.year + 1, self._birthday.value.month, self._birthday.value.day)
         days_left = (next_birthday - current_date).days
 
         print(f"До наступного дня народження залишилося {days_left} днів.")
         return days_left
 
     def __str__(self):
-        return f"Contact name: {self._name._value}, phones: {'; '.join(p._value for p in self._phones)}"
+        return f"Contact name: {self._name.value}, phones: {'; '.join(p.value for p in self._phones)}"
 
     def set_birthdate(self, new_date):
         self._birthday = new_date
@@ -135,7 +120,7 @@ class Record:  # Клас для зберігання інформації пр�
 
     @property
     def name(self):
-        return self._name._value
+        return self._name.value
 
     @name.setter
     def name(self, new_name):
@@ -145,7 +130,7 @@ class Record:  # Клас для зберігання інформації пр�
     def phone(self):
         result = []
         for phon in self._phones:
-            result.append(phon._value)
+            result.append(phon.value)
         return result
 
     @phone.setter
@@ -164,7 +149,7 @@ class AddressBook(UserDict):  # Клас для зберігання та упр
     def find(self, name):  # знаходить запис за ім'ям.
         for key, value in self.data.items():
             if str(key) == name:
-                return value
+                return value  # return the Record object
 
     def delete(self, name):
         for key in self.data.keys():
