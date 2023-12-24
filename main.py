@@ -125,4 +125,3 @@ class AddressBook(UserDict):
 
     def __next__(self):
         raise StopIteration
-
