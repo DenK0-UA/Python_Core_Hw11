@@ -4,18 +4,18 @@ from datetime import datetime
 
 class Field:
     def __init__(self, value):
-        self._value = value
+        self.__value = value
 
     def __str__(self):
-        return str(self._value)
+        return str(self.__value)
 
     @property
     def value(self):
-        return self._value
+        return self.__value
 
     @value.setter
     def value(self, new_value):
-        self._value = new_value
+        self.__value = new_value
 
 
 class Name(Field):
@@ -91,37 +91,23 @@ class Record:
     def __str__(self):
         return f"Contact name: {self.name.value}, phones: {'; '.join(p.value for p in self.phones)}"
 
-
-# class AddressBook(UserDict):
-#     def add_record(self, record):
-#         self.data[record.name.value] = record
-
-#     def find(self, name):
-#         return self.data.get(name)
-
-#     def delete(self, name):
-#         if name in self.data:
-#             del self.data[name]
-
-#     def __iter__(self):
-#         return iter(self.data.values())
-
-#     def __next__(self):
-#         raise StopIteration
-
-
+           
 class AddressBook(UserDict):
+    def add_record(self, record):
+        self.data[record.name.value] = record
+
+    def find(self, name):
+        return self.data.get(name)
+
+    def delete(self, name):
+        if name in self.data:
+            del self.data[name]
+
     def __iter__(self):
-        return self._record_generator()
+        return self.iterator()
 
-    def _record_generator(self, n=1):
-        count = 0
-        for record in self.data.values():
-            yield record
-            count += 1
-            if count >= n:
-                count = 0
-                yield None  # Signal to pause iteration
+    def iterator(self, n=1):
+        records = list(self.data.values())
+        for i in range(0, len(records), n):
+            yield [str(record) for record in records[i:i+n]]
 
-    def __next__(self):
-        raise StopIteration
