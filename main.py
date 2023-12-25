@@ -32,20 +32,20 @@ class Phone(Field):
 class Birthday(Field):
     def __init__(self, value=None):
         if value is not None:
-            self._validate_birthday(value)
+            value = self._validate_birthday(value)
         super().__init__(value)
 
     def _validate_birthday(self, value):
         try:
-            datetime.strptime(value, "%Y-%m-%d")
+            return datetime.strptime(value, "%Y-%m-%d").date()
         except ValueError:
-            raise ValueError("Invalid birthday format. Please use the format 'YYYY-MM-DD'")
+            raise ValueError(
+                "Invalid birthday format. Please use the format 'YYYY-MM-DD'")
 
     @Field.value.setter
     def value(self, new_value):
         if new_value is not None:
-            self._validate_birthday(new_value)
-        self._value = new_value
+            self.__value = self._validate_birthday(new_value)
 
 
 class Record:
@@ -83,15 +83,17 @@ class Record:
         if self.birthday.value is None:
             return None
         today = datetime.today().date()
-        next_birthday = datetime(today.year, self.birthday.value.month, self.birthday.value.day).date()
+        next_birthday = datetime(
+            today.year, self.birthday.value.month, self.birthday.value.day).date()
         if next_birthday < today:
-            next_birthday = datetime(today.year + 1, self.birthday.value.month, self.birthday.value.day).date()
+            next_birthday = datetime(
+                today.year + 1, self.birthday.value.month, self.birthday.value.day).date()
         return (next_birthday - today).days
 
     def __str__(self):
         return f"Contact name: {self.name.value}, phones: {'; '.join(p.value for p in self.phones)}"
 
-           
+
 class AddressBook(UserDict):
     def add_record(self, record):
         self.data[record.name.value] = record
@@ -106,8 +108,7 @@ class AddressBook(UserDict):
     def __iter__(self):
         return self.iterator()
 
-    def iterator(self, n=1):
+    def iterator(self, N=1):
         records = list(self.data.values())
-        for i in range(0, len(records), n):
-            yield [str(record) for record in records[i:i+n]]
-
+        for i in range(0, len(records), N):
+            yield [str(record) for record in records[i:i+N]]
